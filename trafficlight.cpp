@@ -1,169 +1,113 @@
-#include <chrono>
-#include <map>
-#include <thread>
-#include <vector>
+#include <stdexcept>
 
 #include "pico/stdlib.h"
-#include "pico/multicore.h"
 
-enum class Lights
+#include "trafficlight.h"
+
+TrafficLight::TrafficLight(uint redPin, uint yellowPin, uint greenPin, LedType ledType)
 {
-    LED,
-    Red,
-    Yellow,
-    Green,
-    CrossingRed,
-    CrossingGreen
-};
-
-std::map<Lights, uint> _lightsMap
-{
-    {Lights::LED, PICO_DEFAULT_LED_PIN},
-    {Lights::Red, 0u},
-    {Lights::Yellow, 1u},
-    {Lights::Green, 2u},
-    {Lights::CrossingRed, 3u},
-    {Lights::CrossingGreen, 4u}
-};
-
-std::vector<Lights> _trafficLights
-{
-    Lights::Red, Lights::Yellow, Lights::Green, Lights::CrossingRed, Lights::CrossingGreen
-};
-
-bool _awaitingCrossing = false;
-
-void setLight(uint pinId, bool on = true)
-{
-    gpio_put(pinId, !on);
+    setUpForStandardLights(redPin, yellowPin, greenPin);
+    setLedType(ledType);
 }
 
-void setLight(Lights light, bool on = true)
+TrafficLight::TrafficLight(uint redCrossingPin, uint greenCrossingPin, LedType ledType)
 {
-    setLight(_lightsMap.at(light), on);
+    setUpForCrossingLights(redCrossingPin, greenCrossingPin);
+    setLedType(ledType);
 }
 
-void lightsOff()
+TrafficLight::TrafficLight(uint redPin, uint yellowPin, uint greenPin, uint redCrossingPin, uint greenCrossingPin, LedType ledType)
 {
-    for (auto light : _trafficLights)
-    {
-        setLight(light, false);
-    }
+    setUpForStandardLights(redPin, yellowPin, greenPin);
+    setUpForCrossingLights(redCrossingPin, greenCrossingPin);
+    setLedType(ledType);
 }
 
-void flashCrossingToGreen(int flashes = 8)
+void TrafficLight::setUpForStandardLights(uint redPin, uint yellowPin, uint greenPin)
 {
-    for (int flash = flashes; flash > 0; flash--)
-    {        
-        lightsOff();
-        setLight(Lights::CrossingGreen);
-        setLight(Lights::Yellow);
-        sleep_ms(500);
-        lightsOff();
-        sleep_ms(500);
-    }
+    setPin(Light::Red, redPin);
+    setPin(Light::Yellow, yellowPin);
+    setPin(Light::Green, greenPin);
 
-    lightsOff();
-    setLight(Lights::CrossingRed);
-    setLight(Lights::Green);
+    _hasLights = true;
 }
 
-void crossingGreen()
+void TrafficLight::setUpForCrossingLights(uint redPin, uint greenPin)
 {
-    lightsOff();    
-    setLight(Lights::CrossingGreen);
-    setLight(Lights::Red);
+    setPin(Light::RedCrossing, redPin);
+    setPin(Light::GreenCrossing, greenPin);
+
+    _hasCrossingLights = true;
 }
 
-void crossingRed()
+void TrafficLight::setLedType(LedType ledType)
 {
-    lightsOff();    
-    setLight(Lights::CrossingRed);
-    setLight(Lights::Red);
+    _ledType = ledType;
 }
 
-void transitionToRed(std::chrono::milliseconds yellowMs = std::chrono::seconds(3))
+void TrafficLight::turnAllLightsOff()
 {
-    lightsOff();
-    setLight(Lights::CrossingRed);
-    setLight(Lights::Yellow);
-    sleep_ms(yellowMs.count()); 
-    lightsOff();
-    setLight(Lights::CrossingRed);
-    setLight(Lights::Red);
+    turnLightsOff(Light::All);
 }
 
-void transitionToGreen(std::chrono::milliseconds yellowMs = std::chrono::seconds(3))
+void TrafficLight::turnLightsOn(Light lights)
 {
-    lightsOff();
-    setLight(Lights::CrossingRed);
-    setLight(Lights::Red);
-    setLight(Lights::Yellow);
-    sleep_ms(yellowMs.count()); 
-    lightsOff();
-    setLight(Lights::CrossingRed);
-    setLight(Lights::Green);
+    setLightsState(lights, true);
 }
 
-void initPin(uint pinId, int direction = GPIO_OUT) {
-    gpio_init(pinId);
-    gpio_set_dir(pinId, GPIO_OUT);
+void TrafficLight::turnLightsOff(Light lights)
+{
+    setLightsState(lights, false);
 }
 
-void initLights() 
-{
-    for (auto lightMap : _lightsMap)
-    {
-        initPin(lightMap.second);
-    }
-}
-
-void beginCrossingStage()
-{
-    transitionToRed();
-    sleep_ms(2000);
-    crossingGreen();
-    sleep_ms(4000);
-    flashCrossingToGreen();
-}
-
-void lightsThread()
-{
-    while (true) {
-        sleep_ms(100);
-        if (_awaitingCrossing) {
-            beginCrossingStage();
-            _awaitingCrossing = false;
-            sleep_ms(5000);
+void TrafficLight::setLightsState(Light lights, bool on)
+{    
+    for (auto pinMapping : _lightPinMap) {
+        if ((lights & pinMapping.first) != 0 && hasValidPin(pinMapping.first)) {
+            gpio_put(pinMapping.second, shouldInvertOnOff() ? !on : on);
         }
     }
 }
 
-void inputsThread()
+void TrafficLight::setPin(Light light, uint pin)
 {
-    initPin(13, GPIO_IN);
+    _lightPinMap[light] = pin;
     
-    while (true) {   
-        if (!_awaitingCrossing && gpio_get(13))
-        {
-            _awaitingCrossing = true;
-        }         
-
-        gpio_put(_lightsMap[Lights::LED], gpio_get(13));
-        sleep_ms(5);
-    }
+    initPin(pin);
 }
 
-int main() 
+bool TrafficLight::hasLights() const
 {
-    initLights();
-    lightsOff();
-    
-    multicore_launch_core1(&inputsThread);
+    return _hasLights;
+}
 
-    gpio_put(_lightsMap[Lights::Red], 1);
-    gpio_put(_lightsMap[Lights::CrossingRed], 1);
-    sleep_ms(5000);
-    transitionToGreen();
-    lightsThread();
+bool TrafficLight::hasCrossingLights() const
+{
+    return _hasCrossingLights;
+}
+
+bool TrafficLight::hasValidPin(Light light) const
+{
+    return _lightPinMap.find(light) != _lightPinMap.end();
+}
+
+uint TrafficLight::getPin(Light light) const
+{
+    auto foundPin = _lightPinMap.find(light);
+    if (foundPin != _lightPinMap.end()) {
+        return foundPin->second;
+    }
+
+    return 0;
+}
+
+void TrafficLight::initPin(uint pin)
+{
+    gpio_init(pin);
+    gpio_set_dir(pin, GPIO_OUT);
+}
+
+bool TrafficLight::shouldInvertOnOff() const
+{
+    return _ledType == LedType::CommonAnode;
 }
