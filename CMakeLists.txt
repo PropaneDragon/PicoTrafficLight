@@ -8,6 +8,7 @@ add_executable(trafficlight
         trafficlight_group.cpp
         sequence.h
         sequence.cpp
+        commonSequences.h
         )
 
 target_link_libraries(trafficlight pico_stdlib)
