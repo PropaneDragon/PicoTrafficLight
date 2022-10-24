@@ -26,18 +26,14 @@ public:
 class RedToGreenSequence : public Sequence
 {
 public:
-    RedToGreenSequence(std::chrono::milliseconds delay)
-    {
-        add((TrafficLight::Light)(TrafficLight::Light::Green | TrafficLight::Light::RedCrossing), delay);
-    }
-};
+    enum class SequenceType {Red_Green, Red_Yellow_Green};
 
-class RedOrangeToGreenSequence : public Sequence
-{
-public:
-    RedOrangeToGreenSequence(std::chrono::milliseconds delay, std::chrono::milliseconds yellowTime = std::chrono::seconds(3))
+    RedToGreenSequence(std::chrono::milliseconds delay, SequenceType sequenceType = SequenceType::Red_Yellow_Green, std::chrono::milliseconds yellowTime = std::chrono::seconds(3))
     {
-        add((TrafficLight::Light)(TrafficLight::Light::Red | TrafficLight::Light::Yellow | TrafficLight::Light::RedCrossing), yellowTime);
+        if (sequenceType == SequenceType::Red_Yellow_Green) {
+            add((TrafficLight::Light)(TrafficLight::Light::Red | TrafficLight::Light::Yellow | TrafficLight::Light::RedCrossing), yellowTime);
+        }
+
         add((TrafficLight::Light)(TrafficLight::Light::Green | TrafficLight::Light::RedCrossing), delay);
     }
 };

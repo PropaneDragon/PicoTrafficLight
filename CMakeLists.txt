@@ -8,8 +8,11 @@ add_executable(trafficlight
         trafficlight_group.cpp
         sequence.h
         sequence.cpp
-        commonSequences.h
-        )
+        common_sequences.h
+
+        Systems/standard_sequence_interruptable_system.h
+        Systems/standard_sequence_interruptable_system.cpp
+)
 
 target_link_libraries(trafficlight pico_stdlib)
 target_link_libraries(trafficlight pico_multicore)
