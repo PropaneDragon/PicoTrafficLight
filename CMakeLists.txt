@@ -10,8 +10,13 @@ add_executable(trafficlight
         sequence.cpp
         common_sequences.h
 
-        Systems/standard_sequence_interruptable_system.h
-        Systems/standard_sequence_interruptable_system.cpp
+        Systems/abstract_system.h
+        Systems/sequenced_interruptable_system.h
+        Systems/sequenced_interruptable_system.cpp
+        Systems/single_interruptable_crossing_system.h
+        Systems/single_interruptable_crossing_system.cpp
+        Systems/na_stop_give_way_system.h
+        Systems/na_stop_give_way_system.cpp
 )
 
 target_link_libraries(trafficlight pico_stdlib)

@@ -4,7 +4,9 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
-#include "Systems/standard_sequence_interruptable_system.h"
+#include "Systems/sequenced_interruptable_system.h"
+#include "Systems/single_interruptable_crossing_system.h"
+#include "Systems/na_stop_give_way_system.h"
 
 #include "controller.h"
 #include "trafficlight.h"
@@ -12,85 +14,51 @@
 #include "sequence.h"
 #include "common_sequences.h"
 
-std::shared_ptr<StandardSequenceInterruptableSystem> _standardSystem;
+std::shared_ptr<SequencedInterruptableSystem> _standardSystem;
+std::shared_ptr<SingleInterruptableCrossingSystem> _flashingCrossingSystem, _standardCrossingSystem;
+std::shared_ptr<NAStopGiveWaySystem> _stopGiveWaySystem;
 
-void runSimpleExamples(bool loopAutomatically = true)
+void runSequencedSystem(std::vector<std::shared_ptr<TrafficLight>> trafficLights)
 {
-    auto standardController = std::make_shared<Controller>();
-    auto standardAlternateController = std::make_shared<Controller>();
-    auto usFlashingController = std::make_shared<Controller>();
-    auto flashingCrossingController = std::make_shared<Controller>();
-
-    auto northTrafficLight = std::make_shared<TrafficLight>(0u, 1u, 2u, 3u, 4u, TrafficLight::LedType::CommonAnode);
-    auto southTrafficLight = std::make_shared<TrafficLight>(5u, 6u, 7u, 8u, 9u, TrafficLight::LedType::CommonAnode);
-
-    auto northTrafficLightGroup = std::make_shared<TrafficLightGroup>(std::vector<std::shared_ptr<TrafficLight>>{northTrafficLight});
-    auto southTrafficLightGroup = std::make_shared<TrafficLightGroup>(std::vector<std::shared_ptr<TrafficLight>>{southTrafficLight});
-    auto allTrafficLightGroup = std::make_shared<TrafficLightGroup>(std::vector<std::shared_ptr<TrafficLight>>{northTrafficLight, southTrafficLight});
-
-    auto allRedStartSequence = std::make_shared<StaticSequence>(std::chrono::seconds(2));
-    auto customAllRedFlashSequence = std::make_shared<StaticSequence>(std::chrono::milliseconds(0));
-    auto customAllYellowFlashSequence = std::make_shared<StaticSequence>(std::chrono::milliseconds(500), (TrafficLight::Light)(TrafficLight::Light::Yellow | TrafficLight::Light::RedCrossing));
-    auto customOffFlashSequence = std::make_shared<StaticSequence>(std::chrono::milliseconds(500), TrafficLight::Light::RedCrossing);
-    auto redToGreenSequence = std::make_shared<RedToGreenSequence>(std::chrono::seconds(5));
-    auto redToGreenAlternateSequence = std::make_shared<RedToGreenSequence>(std::chrono::seconds(5), RedToGreenSequence::SequenceType::Red_Green);
-    auto greenToRedSequence = std::make_shared<GreenToRedSequence>(std::chrono::seconds(2));
-    auto redCrossingToGreenCrossingSequence = std::make_shared<RedCrossingToGreenCrossingSequence>(std::chrono::seconds(5));
-    auto greenCrossingToRedCrossingSequence = std::make_shared<GreenCrossingToRedCrossingSequence>(std::chrono::seconds(2));
-    auto greenCrossingFlashingSequence = std::make_shared<FlashingCrossingToGreenSequence>(std::chrono::seconds(5));
-
-    standardController->addTrafficLightGroup(allTrafficLightGroup, 0);
-    standardController->addTrafficLightGroup(northTrafficLightGroup, 1);
-    standardController->addTrafficLightGroup(southTrafficLightGroup, 2);
-
-    standardAlternateController->addTrafficLightGroup(allTrafficLightGroup, 0);
-    standardAlternateController->addTrafficLightGroup(northTrafficLightGroup, 1);
-    standardAlternateController->addTrafficLightGroup(southTrafficLightGroup, 2);
-
-    usFlashingController->addTrafficLightGroup(allTrafficLightGroup, 0);
-    usFlashingController->addTrafficLightGroup(northTrafficLightGroup, 1);
-    usFlashingController->addTrafficLightGroup(southTrafficLightGroup, 2);
-
-    flashingCrossingController->addTrafficLightGroup(allTrafficLightGroup, 0);
-    flashingCrossingController->addTrafficLightGroup(northTrafficLightGroup, 1);
-    flashingCrossingController->addTrafficLightGroup(southTrafficLightGroup, 2);
-
-    standardController->addSequence(allRedStartSequence, 0);
-    standardController->addSequence(redToGreenSequence, 1);
-    standardController->addSequence(greenToRedSequence, 1);
-    standardController->addSequence(redToGreenSequence, 2);
-    standardController->addSequence(greenToRedSequence, 2);
-    standardController->addSequence(redCrossingToGreenCrossingSequence, 0);
-    standardController->addSequence(greenCrossingToRedCrossingSequence, 0);
-
-    standardAlternateController->addSequence(allRedStartSequence, 0);
-    standardAlternateController->addSequence(redToGreenAlternateSequence, 1);
-    standardAlternateController->addSequence(greenToRedSequence, 1);
-    standardAlternateController->addSequence(redToGreenAlternateSequence, 2);
-    standardAlternateController->addSequence(greenToRedSequence, 2);
-    standardAlternateController->addSequence(redCrossingToGreenCrossingSequence, 0);
-    standardAlternateController->addSequence(greenCrossingToRedCrossingSequence, 0);
-
-    usFlashingController->addSequence(customAllRedFlashSequence, 1);
-    usFlashingController->addSequence(customAllYellowFlashSequence, 2);
-    usFlashingController->addSequence(customOffFlashSequence, 0);
-
-    flashingCrossingController->addSequence(allRedStartSequence, 0);
-    flashingCrossingController->addSequence(redToGreenSequence, 0);
-    flashingCrossingController->addSequence(greenToRedSequence, 0);
-    flashingCrossingController->addSequence(redCrossingToGreenCrossingSequence, 0);
-    flashingCrossingController->addSequence(greenCrossingFlashingSequence, 0);
-    flashingCrossingController->addSequence(greenToRedSequence, 0);
-
-    while(true) {
-        standardController->run();
-        standardAlternateController->run();
-        flashingCrossingController->run();
-
-        for (int count = 20; count > 0; --count) {
-            usFlashingController->run();
-        }
+    if (!_standardSystem) {
+        _standardSystem = std::make_shared<SequencedInterruptableSystem>(trafficLights, SequencedInterruptableSystem::SequenceType::Auto);
+        _standardSystem->setTiming(SequencedInterruptableSystemTimings::MinimumTimeUntilRedLight, std::chrono::seconds(6), 0);
+        _standardSystem->setTiming(SequencedInterruptableSystemTimings::MinimumTimeUntilRedLight, std::chrono::seconds(2), 1);
+        _standardSystem->setTiming(SequencedInterruptableSystemTimings::CrossingTime, std::chrono::seconds(6), 0);
+        _standardSystem->setTiming(SequencedInterruptableSystemTimings::CrossingTime, std::chrono::seconds(3), 1);
     }
+
+    _standardSystem->requestCrossing();
+    _standardSystem->run();
+}
+
+void runFlashingCrossingSystem(std::vector<std::shared_ptr<TrafficLight>> trafficLights)
+{
+    if (!_flashingCrossingSystem) {
+        _flashingCrossingSystem = std::make_shared<SingleInterruptableCrossingSystem>(trafficLights, SingleInterruptableCrossingSystem::CrossingStyle::Flashing);
+    }
+
+    _flashingCrossingSystem->requestCrossing();
+    _flashingCrossingSystem->run();
+}
+
+void runStandardCrossingSystem(std::vector<std::shared_ptr<TrafficLight>> trafficLights)
+{
+    if (!_standardCrossingSystem) {
+        _standardCrossingSystem = std::make_shared<SingleInterruptableCrossingSystem>(trafficLights, SingleInterruptableCrossingSystem::CrossingStyle::Standard);
+    }
+
+    _standardCrossingSystem->requestCrossing();
+    _standardCrossingSystem->run();
+}
+
+void runNAStopGiveWaySystem(std::vector<std::shared_ptr<TrafficLight>> trafficLights)
+{
+    if (!_stopGiveWaySystem) {
+        _stopGiveWaySystem = std::make_shared<NAStopGiveWaySystem>(trafficLights, 1u);
+    }
+
+    _stopGiveWaySystem->run();
 }
 
 void lightsThread()
@@ -98,14 +66,15 @@ void lightsThread()
     auto northTrafficLight = std::make_shared<TrafficLight>(0u, 1u, 2u, 3u, 4u, TrafficLight::LedType::CommonAnode);
     auto southTrafficLight = std::make_shared<TrafficLight>(5u, 6u, 7u, 8u, 9u, TrafficLight::LedType::CommonAnode);
     
-    _standardSystem = std::make_shared<StandardSequenceInterruptableSystem>(std::vector<std::shared_ptr<TrafficLight>>{northTrafficLight, southTrafficLight}, StandardSequenceInterruptableSystem::SequenceType::Auto);
-    _standardSystem->setTiming(StandardSequenceInterruptableSystem::Timings::MinimumTimeUntilRedLight, std::chrono::seconds(6), 0);
-    _standardSystem->setTiming(StandardSequenceInterruptableSystem::Timings::MinimumTimeUntilRedLight, std::chrono::seconds(2), 1);
-    _standardSystem->setTiming(StandardSequenceInterruptableSystem::Timings::CrossingTime, std::chrono::seconds(6), 0);
-    _standardSystem->setTiming(StandardSequenceInterruptableSystem::Timings::CrossingTime, std::chrono::seconds(3), 1);
+    std::vector<std::shared_ptr<TrafficLight>> trafficLights = { northTrafficLight, southTrafficLight };
 
-    while (true) {
-        _standardSystem->run();
+    while(true) {
+        for (auto loops = 2; loops > 0; --loops) {
+            runSequencedSystem(trafficLights);
+        }
+        runFlashingCrossingSystem(trafficLights);
+        runStandardCrossingSystem(trafficLights);
+        runNAStopGiveWaySystem(trafficLights);
     }
 }
 
@@ -120,15 +89,16 @@ void inputsThread()
     initPin(PICO_DEFAULT_LED_PIN);
     
     while (true) {   
-        if (_standardSystem && gpio_get(13))
-        {
-            _standardSystem->requestCrossing();
-            //_standardSystem->requestNextGroup();
+        if (gpio_get(13)) {
+            if (_standardSystem) {
+                _standardSystem->requestCrossing();
+                //_standardSystem->requestNextGroup();
+            }
 
             sleep_ms(1000);
         }
         
-        sleep_ms(5);
+        sleep_ms(100);
     }
 }
 
