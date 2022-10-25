@@ -108,3 +108,28 @@ public:
     {
     }
 };
+
+class TestSequence : public Sequence
+{
+public:
+    TestSequence(std::chrono::milliseconds animationTime = std::chrono::milliseconds(300))
+    {
+        add(TrafficLight::Light::All, animationTime);
+        add(TrafficLight::Light::Red, animationTime);
+        add(TrafficLight::Light::Yellow, animationTime);
+        add(TrafficLight::Light::Green, animationTime);
+        add(TrafficLight::Light::RedCrossing, animationTime);
+        add(TrafficLight::Light::GreenCrossing, animationTime);
+        add(TrafficLight::Light::None, animationTime);
+        add(TrafficLight::Light::Red, animationTime);
+        add((TrafficLight::Light)(TrafficLight::Light::Red | TrafficLight::Light::Yellow), animationTime);
+        add((TrafficLight::Light)(TrafficLight::Light::Red | TrafficLight::Light::Yellow | TrafficLight::Light::Green), animationTime);
+        add((TrafficLight::Light)(TrafficLight::Light::Red | TrafficLight::Light::Yellow | TrafficLight::Light::Green | TrafficLight::Light::RedCrossing), animationTime);
+        add(TrafficLight::Light::All, animationTime);
+        add((TrafficLight::Light)(TrafficLight::Light::Red | TrafficLight::Light::Yellow | TrafficLight::Light::Green | TrafficLight::Light::RedCrossing), animationTime);
+        add((TrafficLight::Light)(TrafficLight::Light::Red | TrafficLight::Light::Yellow | TrafficLight::Light::Green), animationTime);
+        add((TrafficLight::Light)(TrafficLight::Light::Red | TrafficLight::Light::Yellow), animationTime);
+        add(TrafficLight::Light::Red, animationTime);
+        add(TrafficLight::Light::None, animationTime);
+    }
+};

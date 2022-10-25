@@ -11,6 +11,8 @@ add_executable(trafficlight
         common_sequences.h
 
         Systems/abstract_system.h
+        Systems/light_test_system.h
+        Systems/light_test_system.cpp
         Systems/sequenced_interruptable_system.h
         Systems/sequenced_interruptable_system.cpp
         Systems/single_interruptable_crossing_system.h

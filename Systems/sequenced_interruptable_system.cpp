@@ -165,11 +165,13 @@ void SequencedInterruptableSystem::doCrossingIfRequested()
         auto crossingController = std::make_shared<Controller>();
         auto staticRedSequence = std::make_shared<StaticSequence>(getTimingForCurrentGroup(SequencedInterruptableSystemTimings::DelayUntilGreenCrossing));
         auto redCrossingToGreenCrossingSequence = std::make_shared<RedCrossingToGreenCrossingSequence>(getTimingForCurrentGroup(SequencedInterruptableSystemTimings::CrossingTime));
+        auto staticOffSequence = std::make_shared<StaticSequence>(getTimingForCurrentGroup(SequencedInterruptableSystemTimings::OffTimeBetweenGreenAndRedCrossing), TrafficLight::Light::Red);
         auto greenCrossingToRedCrossingSequence = std::make_shared<GreenCrossingToRedCrossingSequence>(std::chrono::milliseconds(0));
 
         crossingController->addTrafficLightGroup(_allLightsGroup, 0);
         crossingController->addSequence(staticRedSequence, 0);
         crossingController->addSequence(redCrossingToGreenCrossingSequence, 0);
+        crossingController->addSequence(staticOffSequence, 0);
         crossingController->addSequence(greenCrossingToRedCrossingSequence, 0);
 
         _crossingRequested = false;
@@ -201,6 +203,8 @@ std::chrono::milliseconds SequencedInterruptableSystem::getStandardTiming(Sequen
             return std::chrono::seconds(2);
         case SequencedInterruptableSystemTimings::MinimumTimeUntilRedLight:
             return std::chrono::seconds(10);
+        case SequencedInterruptableSystemTimings::OffTimeBetweenGreenAndRedCrossing:
+            return std::chrono::seconds(4);
     }
 
     return std::chrono::milliseconds(0);

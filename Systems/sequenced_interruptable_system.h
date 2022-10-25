@@ -16,7 +16,8 @@ enum class SequencedInterruptableSystemTimings
     DelayUntilGreenLight, //Delay between red light of previous group and starting green light sequence of the current group.
     MinimumTimeUntilRedLight, //The time to wait until it is acceptable to switch back to red again.
     DelayUntilGreenCrossing, //Time to wait between red vehicle light and green crossing light.
-    CrossingTime //Allocated time to allow for crossing.
+    CrossingTime, //Allocated time to allow for crossing.
+    OffTimeBetweenGreenAndRedCrossing, //Time where both red and green crossing lights are off before switching back to red.
 };
 
 /// @brief A simple system that can take n number of traffic lights or groups and sequence them one after another

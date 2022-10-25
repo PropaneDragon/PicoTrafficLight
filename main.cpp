@@ -7,6 +7,7 @@
 #include "Systems/sequenced_interruptable_system.h"
 #include "Systems/single_interruptable_crossing_system.h"
 #include "Systems/na_stop_give_way_system.h"
+#include "Systems/light_test_system.h"
 
 #include "controller.h"
 #include "trafficlight.h"
@@ -17,6 +18,7 @@
 std::shared_ptr<SequencedInterruptableSystem> _standardSystem;
 std::shared_ptr<SingleInterruptableCrossingSystem> _flashingCrossingSystem, _standardCrossingSystem;
 std::shared_ptr<NAStopGiveWaySystem> _stopGiveWaySystem;
+std::shared_ptr<LightTestSystem> _lightTestSystem;
 
 void runSequencedSystem(std::vector<std::shared_ptr<TrafficLight>> trafficLights)
 {
@@ -61,6 +63,15 @@ void runNAStopGiveWaySystem(std::vector<std::shared_ptr<TrafficLight>> trafficLi
     _stopGiveWaySystem->run();
 }
 
+void runTestSystem(std::vector<std::shared_ptr<TrafficLight>> trafficLights)
+{
+    if (!_lightTestSystem) {
+        _lightTestSystem = std::make_shared<LightTestSystem>(trafficLights);
+    }
+
+    _lightTestSystem->run();
+}
+
 void lightsThread()
 {
     auto northTrafficLight = std::make_shared<TrafficLight>(0u, 1u, 2u, 3u, 4u, TrafficLight::LedType::CommonAnode);
@@ -69,11 +80,15 @@ void lightsThread()
     std::vector<std::shared_ptr<TrafficLight>> trafficLights = { northTrafficLight, southTrafficLight };
 
     while(true) {
+        runTestSystem(trafficLights);
         for (auto loops = 2; loops > 0; --loops) {
             runSequencedSystem(trafficLights);
         }
+        runTestSystem(trafficLights);
         runFlashingCrossingSystem(trafficLights);
+        runTestSystem(trafficLights);
         runStandardCrossingSystem(trafficLights);
+        runTestSystem(trafficLights);
         runNAStopGiveWaySystem(trafficLights);
     }
 }
