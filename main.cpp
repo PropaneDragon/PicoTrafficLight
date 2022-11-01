@@ -9,11 +9,7 @@
 #include "Systems/na_stop_give_way_system.h"
 #include "Systems/light_test_system.h"
 
-#include "controller.h"
 #include "trafficlight.h"
-#include "trafficlight_group.h"
-#include "sequence.h"
-#include "common_sequences.h"
 
 std::shared_ptr<SequencedInterruptableSystem> _standardSystem;
 std::shared_ptr<SingleInterruptableCrossingSystem> _flashingCrossingSystem, _standardCrossingSystem;
