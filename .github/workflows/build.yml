@@ -1,0 +1,22 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout TrafficLight
+      uses: actions/checkout@v3
+      
+    - name: Checkout Pico SDK
+      uses: actions/checkout@v3
+      with:
+        repository: https://github.com/raspberrypi/pico-sdk.git
+        submodules: true
