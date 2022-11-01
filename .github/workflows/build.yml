@@ -11,6 +11,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    
+    env:
+      PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
 
     steps:
     - name: Checkout TrafficLight
@@ -24,6 +27,9 @@ jobs:
         path: ./pico-sdk
         repository: raspberrypi/pico-sdk
         submodules: true
+        
+    - name: Listing PICO_SDK_PATH
+      run: echo "$PICO_SDK_PATH"
 
     - name: Listing files in TrafficLight
       run: ls -R
@@ -35,3 +41,21 @@ jobs:
       
     - name: Install tools
       run: sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib
+      
+    - name: Make build directory
+      run: mkdir build
+      working-directory: ./trafficlight
+      
+    - name: Run cmake
+      run: cmake ..
+      working-directory: ./trafficlight/build
+      
+    - name: Make
+      run: make -j4
+      working-directory: ./trafficlight/build
+      
+    - name: Listing files in build
+      run: ls -R
+      working-directory: ./trafficlight/build
+    
+    
