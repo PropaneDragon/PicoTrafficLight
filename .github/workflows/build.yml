@@ -24,3 +24,11 @@ jobs:
         path: ./pico-sdk
         repository: raspberrypi/pico-sdk
         submodules: true
+
+    - name: Listing files in TrafficLight
+      run: ls
+      working-directory: ./trafficlight
+      
+    - name: Listing files in Pico SDK
+      run: ls
+      working-directory: ./pico-sdk
