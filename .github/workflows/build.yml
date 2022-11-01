@@ -26,9 +26,9 @@ jobs:
         submodules: true
 
     - name: Listing files in TrafficLight
-      run: ls
+      run: ls -R
       working-directory: ./trafficlight
       
     - name: Listing files in Pico SDK
-      run: ls
+      run: ls -R
       working-directory: ./pico-sdk
