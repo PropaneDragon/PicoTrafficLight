@@ -34,4 +34,4 @@ jobs:
       working-directory: ./pico-sdk
       
     - name: Install tools
-      run: apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib
+      run: sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib
