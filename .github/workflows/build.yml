@@ -18,5 +18,5 @@ jobs:
     - name: Checkout Pico SDK
       uses: actions/checkout@v3
       with:
-        repository: https://github.com/raspberrypi/pico-sdk.git
+        repository: raspberrypi/pico-sdk
         submodules: true
