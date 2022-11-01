@@ -32,3 +32,6 @@ jobs:
     - name: Listing files in Pico SDK
       run: ls -R
       working-directory: ./pico-sdk
+      
+    - name: Install tools
+      run: apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib
