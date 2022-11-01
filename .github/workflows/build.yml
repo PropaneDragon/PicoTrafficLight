@@ -15,9 +15,12 @@ jobs:
     steps:
     - name: Checkout TrafficLight
       uses: actions/checkout@v3
+      with:
+        path: ./trafficlight
       
     - name: Checkout Pico SDK
       uses: actions/checkout@v3
       with:
+        path: ./pico-sdk
         repository: raspberrypi/pico-sdk
         submodules: true
