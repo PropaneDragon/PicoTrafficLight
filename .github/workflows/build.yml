@@ -57,5 +57,12 @@ jobs:
     - name: Listing files in build
       run: ls -R
       working-directory: ./trafficlight/build
+      
+    - name: Uploading binary
+      uses: actions/upload-artifact@v3.1.1
+      with:
+        name: Binary
+        path: ./trafficlight/build/*.uf2
+        if-no-files-found: error
     
     
