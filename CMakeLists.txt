@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-include(pico_sdk_init.cmake)
+include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
 
 project(pico_development C CXX ASM)
 set(CMAKE_C_STANDARD 11)
