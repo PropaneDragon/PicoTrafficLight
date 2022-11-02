@@ -1,4 +1,6 @@
 # PicoTrafficLight
+![PXL_20221102_152731871](https://user-images.githubusercontent.com/13510828/199532755-37afdb84-506a-4bc0-b0c2-8244ab4d11db.jpg)
+
 An easy to use traffic light controller for Raspberry Pico and possibly other RP2040 boards. Load this on to your board and attach to your projects to have a fully functional traffic light system that emulates systems from all over the world.
 
 ## Features
