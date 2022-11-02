@@ -16,13 +16,23 @@ An easy to use traffic light controller for Raspberry Pico and possibly other RP
 - Configurable groups allows for sequencing large sets of lights.
 - Customisable sequences if the existing configurations aren't quite right for your use case.
 
+
 ## Use cases
-### Scale models
+#### Scale models
 Purchase model traffic lights and plug directly into this system for use on scale models.
-### Leaning and safety.
+#### Leaning and safety.
 Emulate real systems in a safe environment for kids to learn how to cross safely.
-### Play
+#### Play
 Build interactive toys around this system.
 
+
 ## How to build
-- Coming soon
+#### Easy method
+1. Fork this repository.
+1. Modify the main.cpp file to behave as you want.
+1. Run the build action in GitHub.
+1. Download the produced trafficlight.uf2 file in the Binary artifact.
+1. Plug your Pico into your machine, copy the trafficlight.uf2 file onto it.
+1. Enjoy.
+
+If programming isn't your thing, don't worry. I'm still working on a solution to build a custom system using alternate methods.
