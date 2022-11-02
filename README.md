@@ -16,7 +16,6 @@ An easy to use traffic light controller for Raspberry Pico and possibly other RP
 - Configurable groups allows for sequencing large sets of lights.
 - Customisable sequences if the existing configurations aren't quite right for your use case.
 
-
 ## Use cases
 #### Scale models
 Purchase model traffic lights and plug directly into this system for use on scale models.
@@ -25,6 +24,17 @@ Emulate real systems in a safe environment for kids to learn how to cross safely
 #### Play
 Build interactive toys around this system.
 
+## Guide
+### Creating a traffic light to control
+In the below example we set up a new traffic light given pins for red, yellow, green, red crossing and green crossing lights. We then pass a `TrafficLight::LedType` enum which tells it whether it's a common anode or common cathode configuration 
+`std::make_shared<TrafficLight>(0u, 1u, 2u, 3u, 4u, TrafficLight::LedType::CommonAnode);`
+
+You can also just pass red, yellow and green pins without crossing pins to set up for a traffic light system without a crossin, or you can pass only red and green crossing pins to set up for a stand-alone crossing light system.
+If you want, you can manipulate this traffic light manually using the methods provided in the `TrafficLight` class, such as 
+
+`void turnLightsOn(Light lights)`
+
+Where `Light` is an enum of the lights to switch on. Multiple lights can be switched on at once by utilising the binary OR operator. Example: `void turnLightsOn(TrafficLight::Light::Red | TrafficLight::Light::Yellow | TrafficLight::Light::RedCrossing)` which will turn on the red, yellow and red crossing lights all at once. 
 
 ## How to build
 #### Easy method
