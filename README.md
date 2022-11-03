@@ -98,7 +98,7 @@ You don't have to only use a single controller, you can link controllers togethe
 ## How to build
 #### Easy method
 1. Fork this repository.
-1. Modify the main.cpp file to behave as you want.
+1. Modify the main.cpp file to behave as you want. The current main.cpp file is set up to handle 2 traffic lights on GPIO pin 1, 2, 3, 4, 5, 6, 7, 8, 9 and 10 which will loop through different sequences indefinitely.
 1. Run the build action in GitHub.
 1. Download the produced trafficlight.uf2 file in the Binary artifact.
 1. Plug your Pico into your machine, copy the trafficlight.uf2 file onto it.
